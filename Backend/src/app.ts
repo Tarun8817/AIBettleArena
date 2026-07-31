@@ -129,12 +129,13 @@ const distPath = path.resolve(__dirname, "../public/dist")
 // Serve static assets from Frontend dist folder
 app.use(express.static(distPath))
 
-// Support client-side single page routing (SPA) fallback to index.html
-app.get('/:any*', (req, res, next) => {
-    if (req.path.startsWith('/api/')) {
-        return next();
+// Support client-side single page routing (SPA) fallback to index.html using middleware (avoiding path-to-regexp parser conflicts)
+app.use((req, res, next) => {
+    if (req.method === 'GET' && !req.path.startsWith('/api/')) {
+        res.sendFile(path.join(distPath, 'index.html'));
+    } else {
+        next();
     }
-    res.sendFile(path.join(distPath, 'index.html'))
-})
+});
 
 export default app;
