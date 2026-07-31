@@ -1,10 +1,6 @@
 # ⚔️ AI Battle Arena
 
-### 🎮 Homepage Console (Welcome State)
-![AI Battle Arena Homepage Preview](Frontend/public/image.png)
-
-### ⚔️ Battle State (Parallel Solutions & Gemini Referee Verdict)
-![AI Battle Arena Active Battle Response Preview](Frontend/public/image_response.png)
+![AI Battle Arena Dashboard Preview](Frontend/public/image.png)
 
 AI Battle Arena is an interactive, side-by-side LLM coding evaluation platform. It pits two powerhouses—**Mistral AI (Model Alpha)** and **Cohere (Model Beta)**—against each other in real-time coding duels, while utilizing **Google Gemini** as the expert judge to grade correctness, style, completeness, and clarity.
 
@@ -23,13 +19,9 @@ The application features a modern Obsidian Dark theme (`#090909`) with a custom-
     *   **Sidebar Banner**: Displayed at the top of the sidebar with a dark fade gradient, scaling slightly on mouse-over.
     *   **Watermark**: Rendered as a subtle, low-opacity (`opacity-[0.15]`) background behind the project description at the bottom of the sidebar.
 
-### Homepage Console Preview (Welcome State)
+### Dashboard Console Preview
 *   **Asset Path**: `Frontend/public/image.png`
-*   **Visual Content**: Shows the dark obsidian dashboard with suggestion challenge cards prior to executing a code battle.
-
-### Active Battle Console Preview (Dual Solutions & Referee Verdict)
-*   **Asset Path**: `Frontend/public/image_response.png`
-*   **Visual Content**: Full preview of the side-by-side solutions layout, custom HTML tables, list formatting, visual progress score bars, and referee evaluations.
+*   **Visual Content**: Full preview of the dark obsidian dashboard workspace containing side-by-side solutions layout, styled HTML tables, visual progress score bars, and modular interface panels.
 
 ---
 
