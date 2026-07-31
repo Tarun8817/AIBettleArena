@@ -1,4 +1,6 @@
 import express from "express"
+import path from "path"
+import { fileURLToPath } from "url"
 import runGraph from "./ai/graph.ai.js"
 import { Battle } from "./models/battle.model.js"
 
@@ -117,5 +119,22 @@ app.post('/api/solve', async (req, res) => {
         res.status(500).json({ error: error.message || "An error occurred while processing the request" });
     }
 });
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+// Resolve directory path to Backend public/dist files
+const distPath = path.resolve(__dirname, "../public/dist")
+
+// Serve static assets from Frontend dist folder
+app.use(express.static(distPath))
+
+// Support client-side single page routing (SPA) fallback to index.html
+app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api/')) {
+        return next();
+    }
+    res.sendFile(path.join(distPath, 'index.html'))
+})
 
 export default app;

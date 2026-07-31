@@ -169,3 +169,27 @@ Open `http://localhost:5173` in your browser.
 *   **Fonts**:
     *   `Roboto`: Applied globally for clean UI typography.
     *   `JetBrains Mono`: Used for code snippets and formatting inside markdown blocks.
+
+---
+
+## ☁️ Deployment Guide (Render)
+
+We have configured a unified deployment flow using the root [package.json](file:///c:/Users/Tarun%20Rajput/Desktop/AIBettleArena/package.json). This compiles the frontend production bundle and serves it directly from the Express backend, allowing you to host the entire app on a single **Render Web Service** instance.
+
+### Step-by-Step Render Deployment
+
+1.  **Create a New Web Service**:
+    *   Connect your GitHub repository to Render.
+    *   Select **Web Service**.
+2.  **Configure Instance Parameters**:
+    *   **Runtime**: `Node`
+    *   **Build Command**: `npm run build`
+    *   **Start Command**: `npm start`
+3.  **Configure Environment Variables**:
+    Under the **Environment** tab on Render, add the following variables:
+    *   `GOOGLE_API_KEY`: Your Gemini API key.
+    *   `MISTRAL_API_KEY`: Your Mistral AI API key.
+    *   `COHERE_API_KEY`: Your Cohere API key.
+    *   `MONGODB_URI`: Connection string to your MongoDB Database (e.g. MongoDB Atlas URI).
+4.  **Click Deploy**:
+    *   Render will install all frontend/backend dependencies, build the frontend `dist` files, compile the TS server on-the-fly, and start the unified backend on port `3000` (automatically serving client pages).

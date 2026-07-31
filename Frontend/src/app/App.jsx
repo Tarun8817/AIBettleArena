@@ -4,6 +4,8 @@ import Header from '../components/Header'
 import BattleArea from '../components/BattleArea'
 import InputPanel from '../components/InputPanel'
 
+const API_BASE = import.meta.env.DEV ? 'http://localhost:3000' : ''
+
 export default function App() {
   const [conversations, setConversations] = useState([])
   
@@ -24,7 +26,7 @@ export default function App() {
   useEffect(() => {
     const fetchConversations = async () => {
       try {
-        const res = await fetch('http://localhost:3000/api/battles')
+        const res = await fetch(`${API_BASE}/api/battles`)
         if (res.ok) {
           const data = await res.json()
           // Map _id to id so we don't break existing components referencing .id
@@ -56,7 +58,7 @@ export default function App() {
   useEffect(() => {
     const checkConnection = async () => {
       try {
-        const res = await fetch('http://localhost:3000/')
+        const res = await fetch(`${API_BASE}/`)
         if (res.ok || res.status === 404 || res.status === 200) {
           setIsBackendConnected(true)
         } else {
@@ -78,7 +80,7 @@ export default function App() {
   // Create a new empty conversation battle in MongoDB
   const handleStartNewBattle = async () => {
     try {
-      const res = await fetch('http://localhost:3000/api/battles', {
+      const res = await fetch(`${API_BASE}/api/battles`, {
         method: 'POST'
       })
       if (res.ok) {
@@ -100,7 +102,7 @@ export default function App() {
   const handleDeleteConversation = async (id, event) => {
     event.stopPropagation()
     try {
-      const res = await fetch(`http://localhost:3000/api/battles/${id}`, {
+      const res = await fetch(`${API_BASE}/api/battles/${id}`, {
         method: 'DELETE'
       })
       if (res.ok) {
@@ -132,7 +134,7 @@ export default function App() {
     // If there is no active battle, create one first in MongoDB
     if (!currentConversation) {
       try {
-        const res = await fetch('http://localhost:3000/api/battles', {
+        const res = await fetch(`${API_BASE}/api/battles`, {
           method: 'POST'
         })
         if (res.ok) {
@@ -174,7 +176,7 @@ export default function App() {
     setError(null)
 
     try {
-      const response = await fetch('http://localhost:3000/api/solve', {
+      const response = await fetch(`${API_BASE}/api/solve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

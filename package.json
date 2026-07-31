@@ -1,0 +1,11 @@
+{
+  "name": "ai-battle-arena-root",
+  "version": "1.0.0",
+  "description": "Root orchestrator for Monorepo deployment on Render",
+  "scripts": {
+    "install:all": "npm install --prefix Frontend && npm install --prefix Backend",
+    "build:frontend": "npm run build --prefix Frontend",
+    "build": "npm run install:all && npm run build:frontend",
+    "start": "npm start --prefix Backend"
+  }
+}
