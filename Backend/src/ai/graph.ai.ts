@@ -38,10 +38,14 @@ const state = new StateSchema({
  * Solution Node
  */
 const solutionNode: GraphNode<typeof state> = async (state) => {
+    const problemSnippet = state.problem.length > 50 ? `${state.problem.slice(0, 50)}...` : state.problem;
+    console.log(`[GRAPH] [1/2] Generating solutions for problem: "${problemSnippet}"`);
+    const start = Date.now();
     const [mistralResponse, cohereResponse] = await Promise.all([
         mistralAIModel.invoke(state.problem),
         cohereModel.invoke(state.problem),
     ]);
+    console.log(`[GRAPH] [1/2] Solutions generated successfully from Mistral and Cohere. (${Date.now() - start}ms)`);
 
     const unwrapResponse = (response: unknown): string => {
         if (typeof response === "string") return response;
@@ -92,9 +96,10 @@ Return only structured output.
 `,
     });
 
-    const judgeResponse = await judge.invoke({
-        messages: [
-            new HumanMessage(`
+    try {
+        const judgeResponse = await judge.invoke({
+            messages: [
+                new HumanMessage(`
 Problem:
 ${problem}
 
@@ -106,18 +111,31 @@ ${solution_2}
 
 Evaluate both solutions.
 `),
-        ],
-    });
+            ],
+        });
 
-    const result = judgeResponse.structuredResponse;
+        const result = judgeResponse.structuredResponse as any;
 
-    if (!result) {
-        throw new Error("Judge did not return structured output.");
+        if (!result) {
+            throw new Error("Judge did not return structured output.");
+        }
+
+        console.log(`[GRAPH] [2/2] Gemini Judge Verdict: Alpha Score = ${result.solution_1_score}/10, Beta Score = ${result.solution_2_score}/10`);
+
+        return {
+            judge: result,
+        };
+    } catch (e: any) {
+        console.error("[GRAPH] Gemini Judge failed:", e);
+        return {
+            judge: {
+                solution_1_score: 0,
+                solution_2_score: 0,
+                solution_1_reasoning: `Gemini Referee is temporarily unavailable: ${e.message || 'Rate limit or network error'}.`,
+                solution_2_reasoning: `Gemini Referee is temporarily unavailable: ${e.message || 'Rate limit or network error'}.`
+            }
+        };
     }
-
-    return {
-        judge: result,
-    };
 };
 
 /**

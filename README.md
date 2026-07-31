@@ -2,24 +2,37 @@
 
 AI Battle Arena is an interactive, side-by-side LLM coding evaluation platform. It pits two powerhouses—**Mistral AI (Model Alpha)** and **Cohere (Model Beta)**—against each other in real-time coding duels, while utilizing **Google Gemini** as the expert judge to grade correctness, style, completeness, and clarity.
 
-The application leverages a stateful multi-agent workflow powered by **LangGraph** in the backend, and presents an ultra-premium, dark-themed responsive UI in the frontend built with **React 19** and **Tailwind CSS v4**.
+The application leverages a stateful multi-agent workflow powered by **LangGraph** in the TypeScript backend, and presents an ultra-premium, dark-themed responsive UI in the frontend built with **React 19**, **Tailwind CSS v4**, and custom component modules.
+
+---
+
+## 🖼️ User Interface & Artwork
+
+The application features a modern Obsidian Dark theme (`#090909`) with a custom-generated high-fidelity 3D artwork.
+
+### Custom 3D Illustration Asset
+*   **Asset Path**: `Frontend/public/sidebar_illustration.png`
+*   **Visual Content**: A detailed 3D digital illustration of two glowing neon brains (Indigo vs. Purple-Blue) clashing inside an obsidian cyber chamber.
+*   **Aesthetic Usage**:
+    *   **Sidebar Banner**: Displayed at the top of the sidebar with a dark fade gradient, scaling slightly on mouse-over.
+    *   **Watermark**: Rendered as a subtle, low-opacity (`opacity-[0.15]`) background behind the project description at the bottom of the sidebar.
 
 ---
 
 ## 🚀 Key Features
 
-*   **Side-by-Side Dual Code Generation**: Prompts are executed in parallel by Mistral and Cohere.
-*   **Structured AI Referencing**: Google Gemini acts as an expert judge, providing an objective score out of 10 and granular evaluation reasoning for both models.
-*   **Interactive Battle History**: Persistent chat sessions stored via browser `localStorage` with distinct winner tags (`Winner: Alpha`, `Winner: Beta`, `Tie`).
-*   **Syntax Highlighting & Code Copying**: Render code solutions beautifully with an integrated markdown parser and copy-to-clipboard functionality.
-*   **Live Backend Connection Monitor**: Real-time heartbeat checking of the server connection status (visualized by a glowing green/red indicator).
-*   **Aesthetic Responsive Design**: A high-fidelity, futuristic dark interface featuring modern glassmorphism panels, typography, and glowing gradients.
+*   **Side-by-Side Dual Code Generation**: Prompts are executed in parallel by Mistral and Cohere, displayed in wide side-by-side columns.
+*   **Structured AI Referencing**: Google Gemini acts as an expert judge, providing objective scores and reasoning.
+*   **Collapsible Sidebar Console**: A toggle menu button in the header slides the sidebar drawer open/close (`w-0` to `w-[260px]`) to maximize workspace canvas.
+*   **Visual Score Progress Bars**: Replaced plain badges with clean horizontal progress bars comparing solution scores.
+*   **Custom Markdown Parser**: Features HTML table conversion (with borders and alternating row colors) and bullet/numbered lists formatting.
+*   **Rate-Limit API Fallback**: If Gemini hits API rate limits, the backend catches the error and returns a fallback verdict page, ensuring code solutions are still displayed.
+*   **Request Logger Middleware**: Logs HTTP requests, status codes, and server response times in the console.
+*   **Lightweight Health Checks**: The frontend polls the server to show live connection lights without triggering heavy API calls.
 
 ---
 
 ## 📐 Architecture & Flow
-
-### System Interaction Diagram
 
 ```mermaid
 sequenceDiagram
@@ -51,155 +64,77 @@ sequenceDiagram
     Frontend->>User: Render side-by-side solutions & Verdict
 ```
 
-### LangGraph Workflow
-
-The backend uses a LangGraph `StateGraph` to manage the processing pipeline:
-
-```
-[START] ──> [generateSolutions] ──> [judgeSolutions] ──> [END]
-```
-
-1.  **State Schema**:
-    *   `problem`: The input prompt/coding question.
-    *   `solution_1`: Response text from Mistral AI.
-    *   `solution_2`: Response text from Cohere.
-    *   `judge`: Structured JSON containing:
-        *   `solution_1_score` (0-10) & `solution_1_reasoning`
-        *   `solution_2_score` (0-10) & `solution_2_reasoning`
-2.  **generateSolutions Node**: Executes calls to `Mistral AI` (`mistral-medium-latest`) and `Cohere` (`command-a-03-2025`) simultaneously using `Promise.all()`, updates the state.
-3.  **judgeSolutions Node**: Employs a structured LLM output agent powered by `Google Gemini` (`gemini-flash-latest`). It validates the verdict schema through a custom Zod validator to ensure strict JSON formatting.
-
 ---
 
-## 🛠️ Technology Stack
+## 📦 Project Structure & Modules
 
-### Backend
-*   **Runtime**: Node.js
-*   **Language**: TypeScript (using `tsconfig.json` and compiled on-the-fly via `tsx`)
-*   **Web Framework**: Express
-*   **Orchestration**: `@langchain/langgraph` & `langchain`
-*   **Model Adapters**: `@langchain/google`, `@langchain/mistralai`, `@langchain/cohere`
-*   **Validation**: `zod`
-*   **Configuration**: `dotenv`
+The application is structured cleanly, with logic separated into distinct modules.
 
-### Frontend
-*   **Framework**: React 19 (Vite)
-*   **Styling**: Tailwind CSS v4 (incorporating custom themes and custom CSS utility classes)
-*   **Icons**: Google Material Symbols
-*   **Storage**: Browser LocalStorage for persistence
+### Frontend Modules (`Frontend/src/`)
+*   **[App.jsx](file:///c:/Users/Tarun%20Tarun%20Rajput/Desktop/AIBettleArena/Frontend/src/app/App.jsx)**: Main orchestration component. It coordinates React state variables, localStorage persistence, backend connectivity checking, and renders sub-modules.
+*   **[components/Sidebar.jsx](file:///c:/Users/Tarun%20Tarun%20Rajput/Desktop/AIBettleArena/Frontend/src/components/Sidebar.jsx)**: Renders the logo banner, clashing brains 3D image, active backend pulse connection indicators, battle history list, delete triggers, and the bottom faded illustration description card.
+*   **[components/Header.jsx](file:///c:/Users/Tarun%20Tarun%20Rajput/Desktop/AIBettleArena/Frontend/src/components/Header.jsx)**: Houses the collapsible sidebar hamburger toggle, headers, and the backend online/offline status banner.
+*   **[components/BattleArea.jsx](file:///c:/Users/Tarun%20Tarun%20Rajput/Desktop/AIBettleArena/Frontend/src/components/BattleArea.jsx)**: Manages empty states, suggestions cards, loading placeholders, user question blocks, side-by-side code solutions, and the full-width referee verdict block.
+*   **[components/InputPanel.jsx](file:///c:/Users/Tarun%20Tarun%20Rajput/Desktop/AIBettleArena/Frontend/src/components/InputPanel.jsx)**: Renders the message input area, handling keypress triggers (Enter to send) and loading states.
+*   **[components/Markdown.jsx](file:///c:/Users/Tarun%20Tarun%20Rajput/Desktop/AIBettleArena/Frontend/src/components/Markdown.jsx)**: Includes `CopyButton` with click feedback, HTML table parser, lists builder, and markdown-to-HTML formatting.
 
----
-
-## 📦 Project Structure
-
-```
-AIBettleArena/
-├── Backend/
-│   ├── src/
-│   │   ├── ai/
-│   │   │   ├── graph.ai.ts      # LangGraph state schema, solution & judge nodes
-│   │   │   └── model.ai.ts      # LLM clients configurations (Gemini, Mistral, Cohere)
-│   │   ├── config/
-│   │   │   └── config.ts        # Environment configurations loader
-│   │   └── app.ts               # Express middleware, CORS setup & route handlers
-│   ├── server.ts                # App entry point (listens on port 3000)
-│   ├── .env.example             # Template for API keys
-│   ├── tsconfig.json            # TypeScript configuration
-│   └── package.json             # Backend dependencies & scripts
-│
-└── Frontend/
-    ├── src/
-    │   ├── app/
-    │   │   ├── App.css          # Core layout CSS
-    │   │   └── App.jsx          # Main React view, UI logic & API hooks
-    │   ├── index.css            # Tailwind CSS directives & root theme config
-    │   └── main.jsx             # React DOM entry point
-    ├── index.html               # Main HTML shell
-    ├── vite.config.js           # Vite server configuration
-    └── package.json             # Frontend dependencies & scripts
-```
+### Backend Modules (`Backend/src/`)
+*   **`server.ts`**: Entry point that starts the Express server listening on port `3000`.
+*   **`app.ts`**: Sets up JSON parsing, CORS, HTTP request logging middleware, and route handlers (`GET /` health checks, `POST /api/solve` solutions).
+*   **`ai/graph.ai.ts`**: Declares the LangGraph engine, state schemas, and pipeline nodes. Implements a `try/catch` block around the judge node to return safe fallbacks on model rate limits.
+*   **`ai/model.ai.ts`**: Initializes client connectors for Gemini (`gemini-flash-latest`), Mistral (`mistral-medium-latest`), and Cohere (`command-a-03-2025`).
+*   **`config/config.ts`**: Validates and exports environment variable keys.
 
 ---
 
 ## 🔧 Installation & Setup
 
-Follow these steps to run the AI Battle Arena locally:
-
 ### Prerequisites
-*   Node.js (v18 or higher recommended)
-*   npm or yarn
-*   API keys for:
-    *   **Google AI Studio** (for Gemini)
-    *   **Mistral AI Console**
-    *   **Cohere Dashboard**
+*   Node.js (v18 or higher)
+*   API keys for Google Gemini, Mistral, and Cohere.
 
-### 1. Clone & Install Backend
-
-Open your terminal, navigate to the `Backend` directory, and install the dependencies:
-
+### 1. Backend Setup
+Navigate to the `Backend` directory, install dependencies, and create a `.env` file:
 ```bash
 cd Backend
 npm install
 ```
 
-### 2. Configure Environment Variables
-
-Create a `.env` file inside the `Backend` folder. You can copy the example file:
-
-```bash
-cp .env.example .env
-```
-
-Open `.env` and fill in your API credentials:
-
+Create a `.env` file inside the `Backend` directory:
 ```env
 GOOGLE_API_KEY=your_gemini_api_key_here
 MISTRAL_API_KEY=your_mistral_api_key_here
 COHERE_API_KEY=your_cohere_api_key_here
 ```
 
-### 3. Run the Backend Server
-
-Start the development server. It will monitor for changes using `tsx watch`:
-
+Start the backend:
 ```bash
 npm run dev
 ```
 The server will run on `http://localhost:3000`.
 
-### 4. Clone & Install Frontend
-
-Open a new terminal tab, navigate to the `Frontend` directory, and install dependencies:
-
+### 2. Frontend Setup
+Open a new terminal tab, navigate to the `Frontend` directory, and run the client:
 ```bash
 cd Frontend
 npm install
-```
-
-### 5. Run the Frontend Development Server
-
-Launch the Vite development server:
-
-```bash
 npm run dev
 ```
-By default, the frontend is served on `http://localhost:5173`. Open this URL in your web browser.
+Open `http://localhost:5173` in your browser.
 
 ---
 
 ## 🔄 API Endpoint Reference
 
 ### `GET /`
-*   **Description**: Test route to verify server connectivity. Triggers a trial run of LangGraph with the prompt `"Write an code fro Factorial function in js"`.
-*   **Response**: Returns the complete final state of the test run.
+*   **Description**: Lightweight health status endpoint used by the frontend to verify connectivity.
+*   **Response**: `{"status": "ok"}` in <1ms.
 
 ### `POST /api/solve`
 *   **Description**: Triggers a code battle for the user's input prompt.
 *   **Payload**:
     ```json
-    {
-      "problem": "Write a fast Fibonacci function in Go"
-    }
+    { "problem": "Write a fast Fibonacci function in Go" }
     ```
 *   **Response**:
     ```json
@@ -218,9 +153,13 @@ By default, the frontend is served on `http://localhost:5173`. Open this URL in 
 
 ---
 
-## 🎨 UI Highlight Design Rules
+## 🎨 Design System & Tokens
 
-*   **Dark Mode Palette**: Uses sophisticated shades of violet and deep space blue (e.g. `#121222` background, `#0c0c1d` container lows).
-*   **Glassmorphism**: Panels include slight white borders (`border-white/5`), opacity filters, and blur effects for standard-setting aesthetics.
-*   **Code Presentation**: Clean monospaced font family (`JetBrains Mono`) with custom syntax block rendering for seamless reading.
-*   **Micro-animations**: Elements scale down slightly on active clicks (`active:scale-95`), background shifts occur on hover, and the status bubble glows using CSS shadow animations.
+*   **Primary Background**: `#090909` (Obsidian Base)
+*   **Secondary Background**: `#111111` (Sidebar panels)
+*   **Card Surface**: `#171717` (Solutions/input backgrounds)
+*   **Elevated Surface**: `#1F1F1F` (Headers, active items)
+*   **Border & Divider**: `#27272A` (Obsidian borders)
+*   **Fonts**:
+    *   `Roboto`: Applied globally for clean UI typography.
+    *   `JetBrains Mono`: Used for code snippets and formatting inside markdown blocks.

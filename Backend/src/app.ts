@@ -5,6 +5,16 @@ const app = express()
 // Enable JSON body parsing
 app.use(express.json())
 
+// Request Logging Middleware
+app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} - Status: ${res.statusCode} (${duration}ms)`);
+    });
+    next();
+});
+
 // Enable CORS
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -13,10 +23,9 @@ app.use((req, res, next) => {
     next();
 });
 
-app.get('/', async(req, res) => {
-    const result = await runGraph("Write an code fro Factorial function in js")
-    res.json(result)
-})
+app.get('/', (req, res) => {
+    res.json({ status: "ok" });
+});
 
 app.post('/api/solve', async (req, res) => {
     try {
