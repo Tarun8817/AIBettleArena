@@ -130,7 +130,7 @@ const distPath = path.resolve(__dirname, "../public/dist")
 app.use(express.static(distPath))
 
 // Support client-side single page routing (SPA) fallback to index.html
-app.get('(.*)', (req, res, next) => {
+app.get('/:any*', (req, res, next) => {
     if (req.path.startsWith('/api/')) {
         return next();
     }
