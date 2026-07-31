@@ -5,10 +5,7 @@ import BattleArea from '../components/BattleArea'
 import InputPanel from '../components/InputPanel'
 
 export default function App() {
-  const [conversations, setConversations] = useState(() => {
-    const saved = localStorage.getItem('ai_arena_conversations')
-    return saved ? JSON.parse(saved) : []
-  })
+  const [conversations, setConversations] = useState([])
   
   const [activeId, setActiveId] = useState(() => {
     const saved = localStorage.getItem('ai_arena_active_id')
@@ -23,10 +20,23 @@ export default function App() {
   
   const chatEndRef = useRef(null)
 
-  // Save conversations to localStorage
+  // Load conversations from MongoDB on mount
   useEffect(() => {
-    localStorage.setItem('ai_arena_conversations', JSON.stringify(conversations))
-  }, [conversations])
+    const fetchConversations = async () => {
+      try {
+        const res = await fetch('http://localhost:3000/api/battles')
+        if (res.ok) {
+          const data = await res.json()
+          // Map _id to id so we don't break existing components referencing .id
+          const normalized = data.map(c => ({ ...c, id: c._id }))
+          setConversations(normalized)
+        }
+      } catch (err) {
+        console.error("Failed to load battles from database:", err)
+      }
+    }
+    fetchConversations()
+  }, [])
 
   // Save active conversation ID to localStorage
   useEffect(() => {
@@ -65,29 +75,50 @@ export default function App() {
   // Derive active conversation object
   const activeConversation = conversations.find(c => c.id === activeId)
 
-  // Create a new empty conversation battle
-  const handleStartNewBattle = () => {
-    const newConvo = {
-      id: Date.now().toString(),
-      title: 'New Code Battle',
-      messages: []
+  // Create a new empty conversation battle in MongoDB
+  const handleStartNewBattle = async () => {
+    try {
+      const res = await fetch('http://localhost:3000/api/battles', {
+        method: 'POST'
+      })
+      if (res.ok) {
+        const data = await res.json()
+        const newConvo = { ...data, id: data._id }
+        setConversations(prev => [newConvo, ...prev])
+        setActiveId(newConvo.id)
+        setError(null)
+      } else {
+        throw new Error("Failed to create battle in database")
+      }
+    } catch (err) {
+      console.error(err)
+      setError("Database Error: Could not create new battle session.")
     }
-    setConversations(prev => [newConvo, ...prev])
-    setActiveId(newConvo.id)
-    setError(null)
   }
 
-  // Delete a battle from history list
-  const handleDeleteConversation = (id, event) => {
+  // Delete a battle from MongoDB and history list
+  const handleDeleteConversation = async (id, event) => {
     event.stopPropagation()
-    setConversations(prev => prev.filter(c => c.id !== id))
-    if (activeId === id) {
-      const remaining = conversations.filter(c => c.id !== id)
-      if (remaining.length > 0) {
-        setActiveId(remaining[0].id)
+    try {
+      const res = await fetch(`http://localhost:3000/api/battles/${id}`, {
+        method: 'DELETE'
+      })
+      if (res.ok) {
+        setConversations(prev => prev.filter(c => c.id !== id))
+        if (activeId === id) {
+          const remaining = conversations.filter(c => c.id !== id)
+          if (remaining.length > 0) {
+            setActiveId(remaining[0].id)
+          } else {
+            setActiveId('')
+          }
+        }
       } else {
-        setActiveId('')
+        throw new Error("Failed to delete battle from database")
       }
+    } catch (err) {
+      console.error(err)
+      setError("Database Error: Could not delete battle session.")
     }
   }
 
@@ -95,27 +126,30 @@ export default function App() {
   const handleSend = async (problemText) => {
     if (!problemText.trim()) return
 
-    // Ensure we have an active conversation, create one if not
     let currentConversation = activeConversation
-    if (!currentConversation) {
-      const newConvo = {
-        id: Date.now().toString(),
-        title: problemText.trim(),
-        messages: []
-      }
-      setConversations(prev => [newConvo, ...prev])
-      setActiveId(newConvo.id)
-      currentConversation = newConvo
-    }
+    let currentId = activeId
 
-    // Update conversation title if it was default
-    if (currentConversation.title === 'New Code Battle') {
-      setConversations(prev => prev.map(c => {
-        if (c.id === currentConversation.id) {
-          return { ...c, title: problemText.trim() }
+    // If there is no active battle, create one first in MongoDB
+    if (!currentConversation) {
+      try {
+        const res = await fetch('http://localhost:3000/api/battles', {
+          method: 'POST'
+        })
+        if (res.ok) {
+          const data = await res.json()
+          const newConvo = { ...data, id: data._id }
+          setConversations(prev => [newConvo, ...prev])
+          setActiveId(newConvo.id)
+          currentConversation = newConvo
+          currentId = newConvo.id
+        } else {
+          throw new Error("Failed to create battle session")
         }
-        return c
-      }))
+      } catch (err) {
+        console.error(err)
+        setError("Database Error: Could not start battle session.")
+        return
+      }
     }
 
     // Append user message with loading indicator states
@@ -129,7 +163,7 @@ export default function App() {
     }
 
     setConversations(prev => prev.map(c => {
-      if (c.id === currentConversation.id) {
+      if (c.id === currentId) {
         return { ...c, messages: [...c.messages, userMessage] }
       }
       return c
@@ -143,7 +177,10 @@ export default function App() {
       const response = await fetch('http://localhost:3000/api/solve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ problem: problemText.trim() })
+        body: JSON.stringify({ 
+          problem: problemText.trim(),
+          battleId: currentId 
+        })
       })
 
       if (!response.ok) {
@@ -152,19 +189,12 @@ export default function App() {
       }
 
       const data = await response.json()
+      const updatedBattle = { ...data.battle, id: data.battle._id }
       
-      // Update loading message block with real results
+      // Update conversations list with the saved database record
       setConversations(prev => prev.map(c => {
-        if (c.id === currentConversation.id) {
-          const updatedMessages = [...c.messages]
-          updatedMessages[tempIndex] = {
-            problem: problemText.trim(),
-            solution_1: data.solution_1 || 'No solution generated.',
-            solution_2: data.solution_2 || 'No solution generated.',
-            judge: data.judge || null,
-            isTemp: false
-          }
-          return { ...c, messages: updatedMessages }
+        if (c.id === updatedBattle.id) {
+          return updatedBattle
         }
         return c
       }))
@@ -173,7 +203,7 @@ export default function App() {
       setError(err.message || 'Something went wrong')
       // Remove loading placeholder on failure
       setConversations(prev => prev.map(c => {
-        if (c.id === currentConversation.id) {
+        if (c.id === currentId) {
           return { ...c, messages: c.messages.filter((_, idx) => idx !== tempIndex) }
         }
         return c
