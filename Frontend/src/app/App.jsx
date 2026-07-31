@@ -58,8 +58,8 @@ export default function App() {
   useEffect(() => {
     const checkConnection = async () => {
       try {
-        const res = await fetch(`${API_BASE}/`)
-        if (res.ok || res.status === 404 || res.status === 200) {
+        const res = await fetch(`${API_BASE}/api/health`)
+        if (res.ok || res.status === 200) {
           setIsBackendConnected(true)
         } else {
           setIsBackendConnected(false)
