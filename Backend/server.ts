@@ -9,6 +9,12 @@ mongoose.connect(env.MONGODB_URI)
     console.log("Connected to MongoDB successfully!")
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`)
+      setInterval(() => {
+        fetch(`http://localhost:${PORT}/api/health`)
+          .then(res => res.json())
+          .then(data => console.log(`[Keep-Alive] Health check polling:`, data))
+          .catch(err => console.error(`[Keep-Alive] Health check failed:`, err.message));
+      }, 3 * 60 * 1000);
     })
   })
   .catch((err) => {
@@ -16,5 +22,11 @@ mongoose.connect(env.MONGODB_URI)
     // Fallback: Start the server anyway so the client still gets offline status flags
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT} (Database Offline)`)
+      setInterval(() => {
+        fetch(`http://localhost:${PORT}/api/health`)
+          .then(res => res.json())
+          .then(data => console.log(`[Keep-Alive] Health check polling:`, data))
+          .catch(err => console.error(`[Keep-Alive] Health check failed:`, err.message));
+      }, 3 * 60 * 1000);
     })
   })
