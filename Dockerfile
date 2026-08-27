@@ -26,7 +26,7 @@ RUN npm install
 COPY ./Backend /app/Backend
 
 # Copy the compiled frontend build from STAGE 1 into the backend's directory
-COPY --from=frontend_builder /app/Frontend/dist /app/Backend/dist
+COPY --from=frontend_builder /app/Backend/public/dist /app/Backend/public/dist
 
 EXPOSE 3000
 
